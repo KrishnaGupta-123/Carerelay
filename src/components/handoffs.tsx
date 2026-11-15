@@ -1,15 +1,96 @@
 "use client";
 import { useState } from "react";
-import { ArrowLeftRight,CheckCircle2,Clock,ShieldCheck } from "lucide-react";
+import { ArrowLeftRight, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
 import { useCare } from "./care-provider";
-import { PageHeading,AddButton } from "./page-heading";
+import { PageHeading, AddButton } from "./page-heading";
 import { HandoffForm } from "./handoff-form";
 import { HandoffCard } from "./handoff-card";
-import { Card,EmptyState } from "./ui/common";
+import { Card, EmptyState } from "./ui/common";
 import { Button } from "./ui/button";
 import { canManage } from "@/lib/utils";
 export function Handoffs() {
-  const {data}=useCare();const [add,setAdd]=useState(false);const [tab,setTab]=useState("active");const manager=canManage(data.membership?.role);
-  const assignments=data.assignments.filter(a=>tab==="all" || tab==="active" && a.status!=="completed" || tab==="pending" && a.status==="pending" || tab==="completed" && a.status==="completed");
-  return <div className="page-enter"><PageHeading eyebrow="Care, passed with clarity" title="Care handoffs" description="Agree who is helping. Keep the previous and current responsibility visible." action={manager?<AddButton onClick={()=>setAdd(true)}>Create handoff</AddButton>:undefined}/><div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-primary/12 bg-primary/4 px-5 py-4"><ArrowLeftRight size={23} strokeWidth={1.5} className="text-primary"/><div className="flex-1"><h2 className="text-xs font-semibold text-primary">A handoff is an agreement.</h2><p className="mt-1 text-[11px] leading-6 text-muted-foreground">The current person stays responsible until the recipient accepts. Every request, response, and transfer is recorded.</p></div><div className="hidden items-center gap-2 text-[10px] text-primary md:flex"><Clock size={13}/> Request <span className="mx-1 text-muted-foreground">→</span><CheckCircle2 size={13}/> Accept <span className="mx-1 text-muted-foreground">→</span><ShieldCheck size={13}/> Clear responsibility</div></div><div className="mb-6 flex gap-7 border-b border-border">{[["active","Open responsibilities"],["pending","Pending acceptance"],["completed","Completed"],["all","All handoffs"]].map(([id,label])=><button onClick={()=>setTab(id)} key={id} className={`relative pb-3 text-[11px] font-medium ${tab===id?"text-primary":"text-muted-foreground"}`}>{label}{tab===id && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t bg-primary"/>}</button>)}</div>{assignments.length?<div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">{assignments.map(a=><HandoffCard key={a.id} assignment={a}/>)}</div>:<Card><EmptyState icon={ArrowLeftRight} title={tab==="completed"?"Completed care will appear here":"No responsibilities in this view"} description={manager?"Create a handoff when a care task needs a clear responsible person. The recipient can accept or decline.":"Your assigned tasks and pending handoffs will appear here when a member asks for your help."} action={manager?<Button onClick={()=>setAdd(true)}>Create handoff</Button>:undefined}/></Card>}<HandoffForm key={String(add)} open={add} onOpenChange={setAdd}/></div>;
+  const { data } = useCare();
+  const [add, setAdd] = useState(false);
+  const [tab, setTab] = useState("active");
+  const manager = canManage(data.membership?.role);
+  const assignments = data.assignments.filter(
+    (a) =>
+      tab === "all" ||
+      (tab === "active" && a.status !== "completed") ||
+      (tab === "pending" && a.status === "pending") ||
+      (tab === "completed" && a.status === "completed"),
+  );
+  return (
+    <div className="page-enter">
+      <PageHeading
+        eyebrow="Care, passed with clarity"
+        title="Care handoffs"
+        description="Agree who is helping. Keep the previous and current responsibility visible."
+        action={
+          manager ? <AddButton onClick={() => setAdd(true)}>Create handoff</AddButton> : undefined
+        }
+      />
+      <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-primary/12 bg-primary/4 px-5 py-4">
+        <ArrowLeftRight size={23} strokeWidth={1.5} className="text-primary" />
+        <div className="flex-1">
+          <h2 className="text-xs font-semibold text-primary">A handoff is an agreement.</h2>
+          <p className="mt-1 text-[11px] leading-6 text-muted-foreground">
+            The current person stays responsible until the recipient accepts. Every request,
+            response, and transfer is recorded.
+          </p>
+        </div>
+        <div className="hidden items-center gap-2 text-[10px] text-primary md:flex">
+          <Clock size={13} /> Request <span className="mx-1 text-muted-foreground">→</span>
+          <CheckCircle2 size={13} /> Accept <span className="mx-1 text-muted-foreground">→</span>
+          <ShieldCheck size={13} /> Clear responsibility
+        </div>
+      </div>
+      <div className="mb-6 flex gap-7 border-b border-border">
+        {[
+          ["active", "Open responsibilities"],
+          ["pending", "Pending acceptance"],
+          ["completed", "Completed"],
+          ["all", "All handoffs"],
+        ].map(([id, label]) => (
+          <button
+            onClick={() => setTab(id)}
+            key={id}
+            className={`relative pb-3 text-[11px] font-medium ${tab === id ? "text-primary" : "text-muted-foreground"}`}
+          >
+            {label}
+            {tab === id && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t bg-primary" />
+            )}
+          </button>
+        ))}
+      </div>
+      {assignments.length ? (
+        <div className="grid gap-5 md:grid-cols-2 2xl:grid-cols-3">
+          {assignments.map((a) => (
+            <HandoffCard key={a.id} assignment={a} />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <EmptyState
+            icon={ArrowLeftRight}
+            title={
+              tab === "completed"
+                ? "Completed care will appear here"
+                : "No responsibilities in this view"
+            }
+            description={
+              manager
+                ? "Create a handoff when a care task needs a clear responsible person. The recipient can accept or decline."
+                : "Your assigned tasks and pending handoffs will appear here when a member asks for your help."
+            }
+            action={
+              manager ? <Button onClick={() => setAdd(true)}>Create handoff</Button> : undefined
+            }
+          />
+        </Card>
+      )}
+      <HandoffForm key={String(add)} open={add} onOpenChange={setAdd} />
+    </div>
+  );
 }

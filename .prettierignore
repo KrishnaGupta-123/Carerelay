@@ -1,0 +1,9 @@
+node_modules
+.next
+.next-e2e
+.data
+test-results
+playwright-report
+package-lock.json
+scripts/setup-supabase.sql
+supabase

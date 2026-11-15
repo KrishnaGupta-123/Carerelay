@@ -1,24 +1,439 @@
 "use client";
 import { useState } from "react";
-import { CalendarDays,ChevronLeft,ChevronRight,MapPin,Clock,Pencil,ArrowLeftRight,CheckCircle2,X,Calendar,Plus,FileText } from "lucide-react";
-import { addMonths,startOfMonth,endOfMonth,startOfWeek,endOfWeek,eachDayOfInterval,format,isSameMonth } from "date-fns";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Clock,
+  Pencil,
+  ArrowLeftRight,
+  CheckCircle2,
+  X,
+  Calendar,
+  Plus,
+  FileText,
+} from "lucide-react";
+import {
+  addMonths,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  format,
+  isSameMonth,
+} from "date-fns";
 import type { Appointment } from "@/lib/types";
 import { useCare } from "./care-provider";
-import { PageHeading,AddButton } from "./page-heading";
-import { Card,Avatar,Badge,EmptyState } from "./ui/common";
+import { PageHeading, AddButton } from "./page-heading";
+import { Card, Avatar, Badge, EmptyState } from "./ui/common";
 import { Button } from "./ui/button";
-import { Dialog,DialogContent,DialogTitle,DialogDescription } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
 import { AppointmentForm } from "./appointment-form";
 import { HandoffForm } from "./handoff-form";
-import { canManage,localDate,localTime,prettyDate } from "@/lib/utils";
+import { canManage, localDate, localTime, prettyDate } from "@/lib/utils";
 export function Appointments() {
-  const {data,act,busy}=useCare();const [month,setMonth]=useState(new Date());const [add,setAdd]=useState(false);const [edit,setEdit]=useState<Appointment>();const [detail,setDetail]=useState<Appointment>();const [assign,setAssign]=useState<Appointment>();const [cancel,setCancel]=useState<Appointment>();const [tab,setTab]=useState("upcoming");const [selected,setSelected]=useState<string>();
-  const tz=data.profile?.timezone;const manager=canManage(data.membership?.role);const today=localDate(new Date(),tz);
-  const days=eachDayOfInterval({start:startOfWeek(startOfMonth(month)),end:endOfWeek(endOfMonth(month))});
-  const appointments=data.appointments.filter(a=>(tab==="all" || a.status===tab) && (!selected || localDate(a.starts_at,tz)===selected));
-  return <div className="page-enter"><PageHeading eyebrow="Make room for your health" title="Appointments" description="The next visit, the right details, and a clear accompanying person." action={manager?<AddButton onClick={()=>setAdd(true)}>Add appointment</AddButton>:undefined}/><div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]"><div><div className="mb-5 flex flex-wrap items-center gap-5 border-b border-border">{[["upcoming","Upcoming"],["completed","Completed"],["all","All appointments"]].map(([id,label])=><button key={id} onClick={()=>setTab(id)} className={`relative pb-3 text-xs ${tab===id?"font-semibold text-primary":"text-muted-foreground"}`}>{label}{tab===id && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"/>}</button>)}{selected && <button className="ml-auto flex items-center gap-2 pb-3 text-xs text-primary" onClick={()=>setSelected(undefined)}>Clear date filter <X size={12}/></button>}</div>{appointments.length?<div className="space-y-4">{appointments.map(a=>{const member=data.members.find(m=>m.id===a.accompanying_member_id);return <Card key={a.id} className="p-6"><div className="flex items-start gap-4"><div className="flex w-14 shrink-0 flex-col items-center rounded-xl border border-[#e2e8f0] bg-[#f5f7fb] pb-2 pt-3"><span className="text-[9px] font-medium uppercase tracking-wider text-[#8e9aaf]">{prettyDate(a.starts_at,tz,"MMM")}</span><span className="my-1 text-2xl font-semibold text-[#6f819b]">{prettyDate(a.starts_at,tz,"dd")}</span><span className="text-[9px] text-[#8e9aaf]">{prettyDate(a.starts_at,tz,"EEE")}</span></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-start justify-between gap-2"><div><h2 className="text-sm font-semibold">{a.doctor_name}</h2><p className="mt-1 text-[11px] text-muted-foreground">{a.specialty || "Doctor appointment"}</p></div><Badge tone={a.status==="upcoming"?"blue":a.status==="completed"?"green":"neutral"}>{a.status.charAt(0).toUpperCase()+a.status.slice(1)}</Badge></div><p className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground"><MapPin size={12}/>{a.clinic}</p><p className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground"><Clock size={12}/>{localTime(a.starts_at,tz)} · {tz}</p></div></div>{a.notes && <p className="my-4 rounded-lg bg-muted px-3 py-2.5 text-[11px] leading-6 text-muted-foreground">{a.notes}</p>}<div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><span className="flex items-center gap-2 text-[10px] text-muted-foreground">{member && <Avatar name={member.name} tone={1} className="size-6 text-[8px]"/>}{member?`${member.name} accompanies` : "Accompanying person not assigned"}</span><div className="flex flex-wrap gap-1">{manager && <><Button variant="ghost" size="sm" onClick={()=>setEdit(a)}><Pencil size={12}/> Edit</Button>{a.status==="upcoming" && !data.assignments.some(t=>t.appointment_id===a.id) && <Button size="sm" variant="ghost" onClick={()=>setAssign(a)} aria-label="Assign appointment handoff"><ArrowLeftRight size={12}/></Button>}</>}<Button size="sm" variant="outline" onClick={()=>setDetail(a)}>Details <ChevronRight size={12}/></Button></div></div></Card>;})}</div>:<Card><EmptyState icon={CalendarDays} title={selected?"No appointments on this day":"A little planning brings peace of mind"} description="Add a doctor appointment and choose who will accompany you. The care circle can see the details and reminders." action={manager?<Button onClick={()=>setAdd(true)}><Plus size={14}/> Add appointment</Button>:undefined}/></Card>}</div><div className="space-y-5"><Card className="overflow-hidden"><div className="flex items-center justify-between border-b border-border p-5"><h2 className="text-xs font-semibold">{format(month,"MMMM yyyy")}</h2><div className="flex gap-3"><button aria-label="Previous month" onClick={()=>setMonth(addMonths(month,-1))} className="text-muted-foreground"><ChevronLeft size={15}/></button><button aria-label="Next month" onClick={()=>setMonth(addMonths(month,1))} className="text-muted-foreground"><ChevronRight size={15}/></button></div></div><div className="p-4"><div className="calendar-grid mb-2">{["S","M","T","W","T","F","S"].map((d,i)=><span key={i} className="py-2 text-center text-[9px] font-medium text-muted-foreground">{d}</span>)}</div><div className="calendar-grid gap-y-1">{days.map(day=>{const d=format(day,"yyyy-MM-dd");const has=data.appointments.some(a=>a.status!=="cancelled" && localDate(a.starts_at,tz)===d);return <button aria-label={`${format(day,"d MMMM yyyy")}${has?", appointment scheduled":""}`} aria-pressed={selected===d} key={d} onClick={()=>setSelected(selected===d?undefined:d)} className={`relative mx-auto flex size-9 flex-col items-center justify-center rounded-lg text-[11px] ${selected===d?"bg-primary text-white":d===today?"bg-primary/8 font-semibold text-primary":isSameMonth(day,month)?"text-foreground hover:bg-muted":"text-[#c4cdc7]"}`}>{format(day,"d")}{has && <span className={`absolute bottom-1.5 size-1 rounded-full ${selected===d?"bg-white":"bg-primary"}`}/>}</button>;})}</div></div><div className="flex items-center justify-between border-t border-border px-5 py-3 text-[10px] text-muted-foreground"><span className="flex items-center gap-2"><span className="size-1.5 rounded-full bg-primary"/> Appointment</span><button onClick={()=>{setMonth(new Date());setSelected(undefined);}} className="font-semibold text-primary">Today</button></div></Card><Card className="bg-[#f0f5f0] p-5"><Calendar size={20} className="mb-3 text-primary"/><h3 className="text-xs font-semibold">Keep the right people informed.</h3><p className="mt-2 text-[11px] leading-6 text-muted-foreground">Appointment reminders go to the profile owner and the assigned accompanying person, according to their email preferences.</p><p className="mt-3 text-[10px] text-primary">Reminder intervals: {data.profile?.appointment_reminders.map(m=>m>=60?`${m/60} hours`:`${m} minutes`).join(" and ")} before.</p></Card></div></div>
-    <AppointmentForm key={edit?.id || String(add)} open={!!edit || add} onOpenChange={o=>{if(!o){setEdit(undefined);setAdd(false);}}} appointment={edit}/><HandoffForm key={assign?.id} open={!!assign} onOpenChange={o=>{if(!o)setAssign(undefined);}} appointment={assign}/>
-    <Dialog open={!!detail} onOpenChange={o=>{if(!o)setDetail(undefined);}}><DialogContent><DialogTitle>{detail?.doctor_name}</DialogTitle><DialogDescription>{detail?.specialty || "Doctor appointment"} · {detail && prettyDate(detail.starts_at,tz,"EEEE, d MMMM yyyy")}</DialogDescription>{detail && <div className="space-y-4"><p className="flex items-center gap-2 text-sm"><Clock size={16} className="text-primary"/>{localTime(detail.starts_at,tz)} · {tz}</p><p className="flex items-center gap-2 text-sm"><MapPin size={16} className="text-primary"/>{detail.clinic}</p>{detail.location && <p className="pl-6 text-xs text-muted-foreground">{detail.location}</p>}<p className="text-sm">Accompanying: <strong>{data.members.find(m=>m.id===detail.accompanying_member_id)?.name || "Unassigned"}</strong></p>{detail.notes && <div className="rounded-lg bg-muted p-4"><h3 className="text-xs font-semibold">Appointment notes</h3><p className="mt-2 text-sm leading-7 text-muted-foreground">{detail.notes}</p></div>}{detail.follow_up_notes && <div className="rounded-lg bg-primary/4 p-4"><h3 className="flex items-center gap-2 text-xs font-semibold"><FileText size={13}/> Follow-up notes</h3><p className="mt-2 text-sm leading-7 text-muted-foreground">{detail.follow_up_notes}</p></div>}<Badge tone={detail.status==="completed"?"green":"blue"}>{detail.status}</Badge>{manager && <div className="flex flex-wrap gap-2 border-t border-border pt-4"><Button variant="outline" onClick={()=>{setEdit(detail);setDetail(undefined);}}><Pencil size={14}/> Edit appointment</Button>{detail.status==="upcoming" && <><Button variant="secondary" onClick={()=>{setEdit({...detail,status:"completed"});setDetail(undefined);}}><CheckCircle2 size={14}/> Add follow-up</Button><Button variant="destructive" onClick={()=>{setCancel(detail);setDetail(undefined);}}>Cancel visit</Button></>}</div>}</div>}</DialogContent></Dialog>
-    <Dialog open={!!cancel} onOpenChange={o=>{if(!o)setCancel(undefined);}}><DialogContent><DialogTitle>Mark this appointment cancelled?</DialogTitle><DialogDescription>The recorded appointment with {cancel?.doctor_name} stays in history. This updates CareRelay’s record; contact the clinic separately to cancel your booking.</DialogDescription><div className="flex justify-end gap-3"><Button variant="outline" onClick={()=>setCancel(undefined)}>Keep appointment</Button><Button variant="destructive" disabled={busy} onClick={async()=>{if(!cancel)return;try{await act("delete_appointment",{id:cancel.id,expected_version:cancel.version});setCancel(undefined);}catch{}}}>Mark cancelled</Button></div></DialogContent></Dialog>
-  </div>;
+  const { data, now, act, busy } = useCare();
+  const [month, setMonth] = useState(
+    new Date(`${localDate(now, data.profile?.timezone)}T12:00:00`),
+  );
+  const [add, setAdd] = useState(false);
+  const [edit, setEdit] = useState<Appointment>();
+  const [detail, setDetail] = useState<Appointment>();
+  const [assign, setAssign] = useState<Appointment>();
+  const [cancel, setCancel] = useState<Appointment>();
+  const [tab, setTab] = useState("upcoming");
+  const [selected, setSelected] = useState<string>();
+  const tz = data.profile?.timezone;
+  const manager = canManage(data.membership?.role);
+  const today = localDate(now, tz);
+  const days = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(month)),
+    end: endOfWeek(endOfMonth(month)),
+  });
+  const appointments = data.appointments.filter(
+    (a) =>
+      (tab === "all" || a.status === tab) && (!selected || localDate(a.starts_at, tz) === selected),
+  );
+  return (
+    <div className="page-enter">
+      <PageHeading
+        eyebrow="Make room for your health"
+        title="Appointments"
+        description="The next visit, the right details, and a clear accompanying person."
+        action={
+          manager ? <AddButton onClick={() => setAdd(true)}>Add appointment</AddButton> : undefined
+        }
+      />
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div>
+          <div className="mb-5 flex flex-wrap items-center gap-5 border-b border-border">
+            {[
+              ["upcoming", "Upcoming"],
+              ["completed", "Completed"],
+              ["all", "All appointments"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`relative pb-3 text-xs ${tab === id ? "font-semibold text-primary" : "text-muted-foreground"}`}
+              >
+                {label}
+                {tab === id && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                )}
+              </button>
+            ))}
+            {selected && (
+              <button
+                className="ml-auto flex items-center gap-2 pb-3 text-xs text-primary"
+                onClick={() => setSelected(undefined)}
+              >
+                Clear date filter <X size={12} />
+              </button>
+            )}
+          </div>
+          {appointments.length ? (
+            <div className="space-y-4">
+              {appointments.map((a) => {
+                const member = data.members.find((m) => m.id === a.accompanying_member_id);
+                return (
+                  <Card key={a.id} className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex w-14 shrink-0 flex-col items-center rounded-xl border border-[#e2e8f0] bg-[#f5f7fb] pb-2 pt-3">
+                        <span className="text-[9px] font-medium uppercase tracking-wider text-[#8e9aaf]">
+                          {prettyDate(a.starts_at, tz, "MMM")}
+                        </span>
+                        <span className="my-1 text-2xl font-semibold text-[#6f819b]">
+                          {prettyDate(a.starts_at, tz, "dd")}
+                        </span>
+                        <span className="text-[9px] text-[#8e9aaf]">
+                          {prettyDate(a.starts_at, tz, "EEE")}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <h2 className="text-sm font-semibold">{a.doctor_name}</h2>
+                            <p className="mt-1 text-[11px] text-muted-foreground">
+                              {a.specialty || "Doctor appointment"}
+                            </p>
+                          </div>
+                          <Badge
+                            tone={
+                              a.status === "upcoming"
+                                ? "blue"
+                                : a.status === "completed"
+                                  ? "green"
+                                  : "neutral"
+                            }
+                          >
+                            {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
+                          </Badge>
+                        </div>
+                        <p className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <MapPin size={12} />
+                          {a.clinic}
+                        </p>
+                        <p className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <Clock size={12} />
+                          {localTime(a.starts_at, tz)} · {tz}
+                        </p>
+                      </div>
+                    </div>
+                    {a.notes && (
+                      <p className="my-4 rounded-lg bg-muted px-3 py-2.5 text-[11px] leading-6 text-muted-foreground">
+                        {a.notes}
+                      </p>
+                    )}
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+                      <span className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                        {member && (
+                          <Avatar name={member.name} tone={1} className="size-6 text-[8px]" />
+                        )}
+                        {member ? `${member.name} accompanies` : "Accompanying person not assigned"}
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {manager && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => setEdit(a)}>
+                              <Pencil size={12} /> Edit
+                            </Button>
+                            {a.status === "upcoming" &&
+                              !data.assignments.some((t) => t.appointment_id === a.id) && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setAssign(a)}
+                                  aria-label="Assign appointment handoff"
+                                >
+                                  <ArrowLeftRight size={12} />
+                                </Button>
+                              )}
+                          </>
+                        )}
+                        <Button size="sm" variant="outline" onClick={() => setDetail(a)}>
+                          Details <ChevronRight size={12} />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card>
+              <EmptyState
+                icon={CalendarDays}
+                title={
+                  selected
+                    ? "No appointments on this day"
+                    : "A little planning brings peace of mind"
+                }
+                description="Add a doctor appointment and choose who will accompany you. The care circle can see the details and reminders."
+                action={
+                  manager ? (
+                    <Button onClick={() => setAdd(true)}>
+                      <Plus size={14} /> Add appointment
+                    </Button>
+                  ) : undefined
+                }
+              />
+            </Card>
+          )}
+        </div>
+        <div className="space-y-5">
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border p-5">
+              <h2 className="text-xs font-semibold">{format(month, "MMMM yyyy")}</h2>
+              <div className="flex gap-3">
+                <button
+                  aria-label="Previous month"
+                  onClick={() => setMonth(addMonths(month, -1))}
+                  className="text-muted-foreground"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                <button
+                  aria-label="Next month"
+                  onClick={() => setMonth(addMonths(month, 1))}
+                  className="text-muted-foreground"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="calendar-grid mb-2">
+                {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+                  <span
+                    key={i}
+                    className="py-2 text-center text-[9px] font-medium text-muted-foreground"
+                  >
+                    {d}
+                  </span>
+                ))}
+              </div>
+              <div className="calendar-grid gap-y-1">
+                {days.map((day) => {
+                  const d = format(day, "yyyy-MM-dd");
+                  const has = data.appointments.some(
+                    (a) => a.status !== "cancelled" && localDate(a.starts_at, tz) === d,
+                  );
+                  return (
+                    <button
+                      aria-label={`${format(day, "d MMMM yyyy")}${has ? ", appointment scheduled" : ""}`}
+                      aria-pressed={selected === d}
+                      key={d}
+                      onClick={() => setSelected(selected === d ? undefined : d)}
+                      className={`relative mx-auto flex size-9 flex-col items-center justify-center rounded-lg text-[11px] ${selected === d ? "bg-primary text-white" : d === today ? "bg-primary/8 font-semibold text-primary" : isSameMonth(day, month) ? "text-foreground hover:bg-muted" : "text-[#c4cdc7]"}`}
+                    >
+                      {format(day, "d")}
+                      {has && (
+                        <span
+                          className={`absolute bottom-1.5 size-1 rounded-full ${selected === d ? "bg-white" : "bg-primary"}`}
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="flex items-center justify-between border-t border-border px-5 py-3 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-primary" /> Appointment
+              </span>
+              <button
+                onClick={() => {
+                  setMonth(new Date(`${today}T12:00:00`));
+                  setSelected(undefined);
+                }}
+                className="font-semibold text-primary"
+              >
+                Today
+              </button>
+            </div>
+          </Card>
+          <Card className="bg-[#f0f5f0] p-5">
+            <Calendar size={20} className="mb-3 text-primary" />
+            <h3 className="text-xs font-semibold">Keep the right people informed.</h3>
+            <p className="mt-2 text-[11px] leading-6 text-muted-foreground">
+              Appointment reminders go to the profile owner and the assigned accompanying person,
+              according to their email preferences.
+            </p>
+            <p className="mt-3 text-[10px] text-primary">
+              Reminder intervals:{" "}
+              {data.profile?.appointment_reminders
+                .map((m) => (m >= 60 ? `${m / 60} hours` : `${m} minutes`))
+                .join(" and ")}{" "}
+              before.
+            </p>
+          </Card>
+        </div>
+      </div>
+      <AppointmentForm
+        key={edit?.id || String(add)}
+        open={!!edit || add}
+        onOpenChange={(o) => {
+          if (!o) {
+            setEdit(undefined);
+            setAdd(false);
+          }
+        }}
+        appointment={edit}
+      />
+      <HandoffForm
+        key={assign?.id}
+        open={!!assign}
+        onOpenChange={(o) => {
+          if (!o) setAssign(undefined);
+        }}
+        appointment={assign}
+      />
+      <Dialog
+        open={!!detail}
+        onOpenChange={(o) => {
+          if (!o) setDetail(undefined);
+        }}
+      >
+        <DialogContent>
+          <DialogTitle>{detail?.doctor_name}</DialogTitle>
+          <DialogDescription>
+            {detail?.specialty || "Doctor appointment"} ·{" "}
+            {detail && prettyDate(detail.starts_at, tz, "EEEE, d MMMM yyyy")}
+          </DialogDescription>
+          {detail && (
+            <div className="space-y-4">
+              <p className="flex items-center gap-2 text-sm">
+                <Clock size={16} className="text-primary" />
+                {localTime(detail.starts_at, tz)} · {tz}
+              </p>
+              <p className="flex items-center gap-2 text-sm">
+                <MapPin size={16} className="text-primary" />
+                {detail.clinic}
+              </p>
+              {detail.location && (
+                <p className="pl-6 text-xs text-muted-foreground">{detail.location}</p>
+              )}
+              <p className="text-sm">
+                Accompanying:{" "}
+                <strong>
+                  {data.members.find((m) => m.id === detail.accompanying_member_id)?.name ||
+                    "Unassigned"}
+                </strong>
+              </p>
+              {detail.notes && (
+                <div className="rounded-lg bg-muted p-4">
+                  <h3 className="text-xs font-semibold">Appointment notes</h3>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{detail.notes}</p>
+                </div>
+              )}
+              {detail.follow_up_notes && (
+                <div className="rounded-lg bg-primary/4 p-4">
+                  <h3 className="flex items-center gap-2 text-xs font-semibold">
+                    <FileText size={13} /> Follow-up notes
+                  </h3>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                    {detail.follow_up_notes}
+                  </p>
+                </div>
+              )}
+              <Badge tone={detail.status === "completed" ? "green" : "blue"}>{detail.status}</Badge>
+              {manager && (
+                <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEdit(detail);
+                      setDetail(undefined);
+                    }}
+                  >
+                    <Pencil size={14} /> Edit appointment
+                  </Button>
+                  {detail.status === "upcoming" && (
+                    <>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setEdit({ ...detail, status: "completed" });
+                          setDetail(undefined);
+                        }}
+                      >
+                        <CheckCircle2 size={14} /> Add follow-up
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          setCancel(detail);
+                          setDetail(undefined);
+                        }}
+                      >
+                        Cancel visit
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={!!cancel}
+        onOpenChange={(o) => {
+          if (!o) setCancel(undefined);
+        }}
+      >
+        <DialogContent>
+          <DialogTitle>Mark this appointment cancelled?</DialogTitle>
+          <DialogDescription>
+            The recorded appointment with {cancel?.doctor_name} stays in history. This updates
+            CareRelay’s record; contact the clinic separately to cancel your booking.
+          </DialogDescription>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setCancel(undefined)}>
+              Keep appointment
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={busy}
+              onClick={async () => {
+                if (!cancel) return;
+                try {
+                  await act("delete_appointment", {
+                    id: cancel.id,
+                    expected_version: cancel.version,
+                  });
+                  setCancel(undefined);
+                } catch {}
+              }}
+            >
+              Mark cancelled
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

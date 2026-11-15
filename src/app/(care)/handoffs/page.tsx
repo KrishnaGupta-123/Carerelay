@@ -1,2 +1,4 @@
 import { Handoffs } from "@/components/handoffs";
-export default function Page(){return <Handoffs/>;}
+export default function Page() {
+  return <Handoffs />;
+}

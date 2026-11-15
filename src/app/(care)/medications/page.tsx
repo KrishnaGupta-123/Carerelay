@@ -1,2 +1,4 @@
 import { Medications } from "@/components/medications";
-export default function Page(){return <Medications/>;}
+export default function Page() {
+  return <Medications />;
+}

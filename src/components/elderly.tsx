@@ -1,22 +1,215 @@
 "use client";
-import { useState,useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Sun,Type,CalendarDays,Clock,HelpCircle,Pill,ArrowRight,HeartHandshake,ShieldCheck } from "lucide-react";
+import {
+  Sun,
+  Type,
+  CalendarDays,
+  Clock,
+  HelpCircle,
+  Pill,
+  ArrowRight,
+  HeartHandshake,
+  ShieldCheck,
+} from "lucide-react";
 import { useCare } from "./care-provider";
-import { Card,StatusBadge,Avatar } from "./ui/common";
+import { Card, StatusBadge, Avatar } from "./ui/common";
 import { Button } from "./ui/button";
 import { DoseActions } from "./dose-actions";
 import { HelpDialog } from "./help-dialog";
 import { AppointmentForm } from "./appointment-form";
 import { MedicationForm } from "./medication-form";
-import { canManage,localDate,localTime,prettyDate } from "@/lib/utils";
-function subscribeTextSize(callback:()=>void) {window.addEventListener("storage",callback);window.addEventListener("care-text-size",callback);return ()=>{window.removeEventListener("storage",callback);window.removeEventListener("care-text-size",callback);};}
+import { canManage, localDate, localTime, prettyDate } from "@/lib/utils";
+function subscribeTextSize(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener("care-text-size", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("care-text-size", callback);
+  };
+}
 export function Elderly() {
-  const {data}=useCare();const [help,setHelp]=useState(false);const [add,setAdd]=useState(false);const [addAppointment,setAddAppointment]=useState(false);
-  const large=useSyncExternalStore(subscribeTextSize,()=>localStorage.getItem("care-large-text")==="true",()=>false);
-  const setLarge=(value:boolean)=>{localStorage.setItem("care-large-text",String(value));window.dispatchEvent(new Event("care-text-size"));};
-  const tz=data.profile?.timezone;const today=localDate(new Date(),tz);const doses=data.doses.filter(d=>localDate(d.scheduled_at,tz)===today);const next=data.appointments.find(a=>a.status==="upcoming" && new Date(a.starts_at)>new Date());
-  return <div className={`elderly mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-12 ${large?"large-text":""}`}><div className="flex flex-wrap items-center justify-between gap-4"><span className="flex items-center gap-2 text-sm text-muted-foreground"><Sun size={19} className="text-amber-600"/>{prettyDate(new Date(),tz,"EEEE, d MMMM")}</span><button aria-pressed={large} onClick={()=>{setLarge(!large);localStorage.setItem("care-large-text",String(!large));}} className="flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-semibold"><Type size={20}/>{large?"Standard text":"Larger text"}</button></div><h1 className="mt-7 text-4xl font-semibold tracking-tight">Hello, {data.profile?.preferred_name}.</h1><p className="mt-3 text-base text-muted-foreground">Here is your day, one small step at a time.</p><div className="my-7 flex flex-wrap gap-3"><Button size="lg" variant="outline" onClick={()=>setHelp(true)}><HelpCircle size={21}/> Ask for help</Button>{canManage(data.membership?.role) && <><Button size="lg" variant="outline" onClick={()=>setAdd(true)}><Pill size={20}/> Add medication</Button><Button size="lg" variant="outline" onClick={()=>setAddAppointment(true)}><CalendarDays size={20}/> Add appointment</Button></>}</div>
-    <section aria-labelledby="medication-heading"><div className="mb-5 flex items-center justify-between"><h2 id="medication-heading" className="text-xl font-semibold">My medications today</h2><span className="text-sm text-muted-foreground">{doses.filter(d=>["self_reported_taken","assisted_recorded"].includes(d.status)).length} reported taken</span></div><div className="space-y-5">{doses.length?doses.map(d=>{const member=data.members.find(m=>m.id===d.assigned_member_id);return <Card key={d.id} className="p-6 md:p-8"><div className="flex flex-wrap items-center justify-between gap-3"><span className="flex items-center gap-2 text-base font-semibold text-primary"><Clock size={21}/>{localTime(d.scheduled_at,tz)}</span><StatusBadge status={d.status}/></div><h3 className="dose-name mt-5 text-xl font-semibold">{d.snapshot.name}<span className="ml-2 text-lg font-normal text-muted-foreground">{d.snapshot.strength}</span></h3><p className="mt-2 text-base font-medium">{d.snapshot.dosage}</p><p className="dose-instructions mt-3 text-base text-muted-foreground">{d.snapshot.instructions}</p>{member && <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground"><Avatar name={member.name} className="size-7"/> {member.name} is the recorded helper.</p>}<DoseActions dose={d} large/>{d.note && <p className="mt-4 rounded-xl bg-muted p-3 text-sm text-muted-foreground">Your note: {d.note}</p>}</Card>;}):<Card className="p-8"><HeartHandshake size={32} className="text-primary"/><h3 className="mt-5 text-xl font-semibold">No medications scheduled today.</h3><p className="mt-3 text-base text-muted-foreground">If you have a prescription to record, you can add it to your care profile.</p>{canManage(data.membership?.role) && <Button size="lg" onClick={()=>setAdd(true)} className="mt-5">Add my medication</Button>}</Card>}</div><p className="mt-5 flex items-start gap-2 text-sm text-muted-foreground"><ShieldCheck size={18} className="mt-1 shrink-0"/>Your report tells your care circle what you recorded. “Not sure” does not mean you missed your medication.</p></section>
-    <section className="mt-9" aria-labelledby="appointment-heading"><h2 className="mb-5 text-xl font-semibold" id="appointment-heading">My next appointment</h2><Card className="p-6 md:p-8">{next?<><p className="flex items-center gap-2 text-base font-semibold text-primary"><CalendarDays size={22}/>{prettyDate(next.starts_at,tz,"EEEE, d MMMM")} · {localTime(next.starts_at,tz)}</p><h3 className="mt-4 text-xl font-semibold">{next.doctor_name}</h3><p className="mt-2 text-base text-muted-foreground">{next.clinic}</p><p className="mt-3 text-base">{data.members.find(m=>m.id===next.accompanying_member_id)?.name || "An accompanying person has not been assigned"}{next.accompanying_member_id?" will accompany you.":"."}</p>{next.notes && <p className="mt-4 rounded-xl bg-muted p-4 text-base text-muted-foreground">{next.notes}</p>}</>:<p className="text-base text-muted-foreground">No upcoming appointments are recorded.</p>}<Link href="/appointments" className="mt-5 inline-flex items-center gap-2 text-base font-semibold text-primary">View appointments <ArrowRight size={18}/></Link></Card></section><p className="mt-8 text-sm leading-7 text-muted-foreground">CareRelay helps your circle coordinate care. Your doctor or pharmacist should confirm your medication instructions. For urgent medical help, contact your local emergency service.</p><HelpDialog open={help} onOpenChange={setHelp}/><MedicationForm key={String(add)} open={add} onOpenChange={setAdd}/><AppointmentForm key={String(addAppointment)} open={addAppointment} onOpenChange={setAddAppointment}/></div>;
+  const { data, now } = useCare();
+  const [help, setHelp] = useState(false);
+  const [add, setAdd] = useState(false);
+  const [addAppointment, setAddAppointment] = useState(false);
+  const large = useSyncExternalStore(
+    subscribeTextSize,
+    () => localStorage.getItem("care-large-text") === "true",
+    () => false,
+  );
+  const setLarge = (value: boolean) => {
+    localStorage.setItem("care-large-text", String(value));
+    window.dispatchEvent(new Event("care-text-size"));
+  };
+  const tz = data.profile?.timezone;
+  const today = localDate(now, tz);
+  const doses = data.doses.filter((d) => localDate(d.scheduled_at, tz) === today);
+  const next = data.appointments.find(
+    (a) => a.status === "upcoming" && new Date(a.starts_at) > now,
+  );
+  return (
+    <div
+      className={`elderly mx-auto max-w-4xl px-5 py-8 md:px-8 md:py-12 ${large ? "large-text" : ""}`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <span className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Sun size={19} className="text-amber-600" />
+          {prettyDate(now, tz, "EEEE, d MMMM")}
+        </span>
+        <button
+          aria-pressed={large}
+          onClick={() => {
+            setLarge(!large);
+            localStorage.setItem("care-large-text", String(!large));
+          }}
+          className="flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2 text-sm font-semibold"
+        >
+          <Type size={20} />
+          {large ? "Standard text" : "Larger text"}
+        </button>
+      </div>
+      <h1 className="mt-7 text-4xl font-semibold tracking-tight">
+        Hello, {data.profile?.preferred_name}.
+      </h1>
+      <p className="mt-3 text-base text-muted-foreground">
+        Here is your day, one small step at a time.
+      </p>
+      <div className="my-7 flex flex-wrap gap-3">
+        <Button size="lg" variant="outline" onClick={() => setHelp(true)}>
+          <HelpCircle size={21} /> Ask for help
+        </Button>
+        {canManage(data.membership?.role) && (
+          <>
+            <Button size="lg" variant="outline" onClick={() => setAdd(true)}>
+              <Pill size={20} /> Add medication
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => setAddAppointment(true)}>
+              <CalendarDays size={20} /> Add appointment
+            </Button>
+          </>
+        )}
+      </div>
+      <section aria-labelledby="medication-heading">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 id="medication-heading" className="text-xl font-semibold">
+            My medications today
+          </h2>
+          <span className="text-sm text-muted-foreground">
+            {
+              doses.filter((d) => ["self_reported_taken", "assisted_recorded"].includes(d.status))
+                .length
+            }{" "}
+            reported taken
+          </span>
+        </div>
+        <div className="space-y-5">
+          {doses.length ? (
+            doses.map((d) => {
+              const member = data.members.find((m) => m.id === d.assigned_member_id);
+              return (
+                <Card key={d.id} className="p-6 md:p-8">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <span className="flex items-center gap-2 text-base font-semibold text-primary">
+                      <Clock size={21} />
+                      {localTime(d.scheduled_at, tz)}
+                    </span>
+                    <StatusBadge status={d.status} />
+                  </div>
+                  <h3 className="dose-name mt-5 text-xl font-semibold">
+                    {d.snapshot.name}
+                    <span className="ml-2 text-lg font-normal text-muted-foreground">
+                      {d.snapshot.strength}
+                    </span>
+                  </h3>
+                  <p className="mt-2 text-base font-medium">{d.snapshot.dosage}</p>
+                  <p className="dose-instructions mt-3 text-base text-muted-foreground">
+                    {d.snapshot.instructions}
+                  </p>
+                  {member && (
+                    <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                      <Avatar name={member.name} className="size-7" /> {member.name} is the recorded
+                      helper.
+                    </p>
+                  )}
+                  <DoseActions dose={d} large />
+                  {d.note && (
+                    <p className="mt-4 rounded-xl bg-muted p-3 text-sm text-muted-foreground">
+                      Your note: {d.note}
+                    </p>
+                  )}
+                </Card>
+              );
+            })
+          ) : (
+            <Card className="p-8">
+              <HeartHandshake size={32} className="text-primary" />
+              <h3 className="mt-5 text-xl font-semibold">No medications scheduled today.</h3>
+              <p className="mt-3 text-base text-muted-foreground">
+                If you have a prescription to record, you can add it to your care profile.
+              </p>
+              {canManage(data.membership?.role) && (
+                <Button size="lg" onClick={() => setAdd(true)} className="mt-5">
+                  Add my medication
+                </Button>
+              )}
+            </Card>
+          )}
+        </div>
+        <p className="mt-5 flex items-start gap-2 text-sm text-muted-foreground">
+          <ShieldCheck size={18} className="mt-1 shrink-0" />
+          Your report tells your care circle what you recorded. “Not sure” does not mean you missed
+          your medication.
+        </p>
+      </section>
+      <section className="mt-9" aria-labelledby="appointment-heading">
+        <h2 className="mb-5 text-xl font-semibold" id="appointment-heading">
+          My next appointment
+        </h2>
+        <Card className="p-6 md:p-8">
+          {next ? (
+            <>
+              <p className="flex items-center gap-2 text-base font-semibold text-primary">
+                <CalendarDays size={22} />
+                {prettyDate(next.starts_at, tz, "EEEE, d MMMM")} · {localTime(next.starts_at, tz)}
+              </p>
+              <h3 className="mt-4 text-xl font-semibold">{next.doctor_name}</h3>
+              <p className="mt-2 text-base text-muted-foreground">{next.clinic}</p>
+              <p className="mt-3 text-base">
+                {data.members.find((m) => m.id === next.accompanying_member_id)?.name ||
+                  "An accompanying person has not been assigned"}
+                {next.accompanying_member_id ? " will accompany you." : "."}
+              </p>
+              {next.notes && (
+                <p className="mt-4 rounded-xl bg-muted p-4 text-base text-muted-foreground">
+                  {next.notes}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-base text-muted-foreground">
+              No upcoming appointments are recorded.
+            </p>
+          )}
+          <Link
+            href="/appointments"
+            className="mt-5 inline-flex items-center gap-2 text-base font-semibold text-primary"
+          >
+            View appointments <ArrowRight size={18} />
+          </Link>
+        </Card>
+      </section>
+      <p className="mt-8 text-sm leading-7 text-muted-foreground">
+        CareRelay helps your circle coordinate care. Your doctor or pharmacist should confirm your
+        medication instructions. For urgent medical help, contact your local emergency service.
+      </p>
+      <HelpDialog open={help} onOpenChange={setHelp} />
+      <MedicationForm key={`medication-${add}`} open={add} onOpenChange={setAdd} />
+      <AppointmentForm
+        key={`appointment-${addAppointment}`}
+        open={addAppointment}
+        onOpenChange={setAddAppointment}
+      />
+    </div>
+  );
 }

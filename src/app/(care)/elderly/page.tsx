@@ -1,2 +1,4 @@
 import { Elderly } from "@/components/elderly";
-export default function Page(){return <Elderly/>;}
+export default function Page() {
+  return <Elderly />;
+}

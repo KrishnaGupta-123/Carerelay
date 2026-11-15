@@ -4,29 +4,97 @@
   --color-background: #f7f9f8;
   --color-foreground: #243a36;
   --color-muted: #f3f6f4;
-  --color-muted-foreground: #7b8985;
+  --color-muted-foreground: #52685d;
   --color-primary: #267663;
   --color-border: #e7ece9;
   --font-sans: "Inter", "Segoe UI", Arial, sans-serif;
 }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--color-background); color: var(--color-foreground); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
-button:not(:disabled),select { cursor: pointer; }
-::selection { background: #d9eee5; }
-input[type="checkbox"] { accent-color: var(--color-primary); }
-input[type="date"],input[type="time"] { color-scheme: light; }
-:focus-visible { outline: 2px solid #267663; outline-offset: 3px; }
-.page-enter { animation: enter 260ms ease-out both; }
-@keyframes enter { from {opacity:0;transform:translateY(7px);} to {opacity:1;transform:translateY(0);} }
-.scrollbar-thin::-webkit-scrollbar { width:4px; }
-.scrollbar-thin::-webkit-scrollbar-thumb { background:#dce5df;border-radius:6px; }
-.elderly { font-size:18px; }
-.elderly.large-text { font-size:22px; }
-.elderly button { min-height:52px; }
-.elderly p { line-height:1.7; }
-.elderly.large-text h1 { font-size:2.5rem; }
-.elderly.large-text .dose-name { font-size:1.6rem; }
-.elderly.large-text .dose-instructions { font-size:1.2rem; }
-.calendar-grid { display:grid;grid-template-columns:repeat(7,minmax(0,1fr)); }
-@media (prefers-reduced-motion:reduce) { *,*::before,*::after {animation:none!important;scroll-behavior:auto!important;transition:none!important;} }
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button:not(:disabled),
+select {
+  cursor: pointer;
+}
+::selection {
+  background: #d9eee5;
+}
+input[type="checkbox"] {
+  accent-color: var(--color-primary);
+}
+input[type="date"],
+input[type="time"] {
+  color-scheme: light;
+}
+:focus-visible {
+  outline: 2px solid #267663;
+  outline-offset: 3px;
+}
+.page-enter {
+  animation: enter 260ms ease-out both;
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #dce5df;
+  border-radius: 6px;
+}
+.elderly {
+  font-size: 18px;
+}
+.elderly.large-text {
+  font-size: 22px;
+}
+.elderly button {
+  min-height: 52px;
+}
+.elderly p {
+  line-height: 1.7;
+}
+.elderly.large-text h1 {
+  font-size: 2.5rem;
+}
+.elderly.large-text .dose-name {
+  font-size: 1.6rem;
+}
+.elderly.large-text .dose-instructions {
+  font-size: 1.2rem;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

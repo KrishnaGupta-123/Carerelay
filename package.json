@@ -12,8 +12,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "format": "prettier --write src scripts tests e2e *.ts *.mjs *.json *.md",
+    "format:check": "prettier --check src scripts tests e2e *.ts *.mjs *.json *.md",
+    "verify:repo": "node scripts/verify-repo.mjs",
     "db:migrate": "tsx --conditions=react-server scripts/migrate.ts",
-    "db:seed": "tsx --conditions=react-server scripts/seed.ts"
+    "db:seed": "tsx --conditions=react-server scripts/seed.ts",
+    "db:worker": "tsx scripts/setup-worker.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",
@@ -40,6 +44,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@eslint/eslintrc": "^3.3.1",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.17",
@@ -48,12 +53,15 @@
     "@types/react-dom": "^19.2.2",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.4.6",
+    "prettier": "^3.10.1",
     "tailwindcss": "^4.1.17",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.10"
   },
   "overrides": {
-    "@typescript-eslint/typescript-estree": { "minimatch": "^11.0.8" }
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.8"
+    }
   }
 }
