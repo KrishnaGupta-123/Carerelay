@@ -145,21 +145,20 @@ CareRelay uses a Next.js application with server-side authentication and applica
 
 ```mermaid
 flowchart TD
-    U[Older person / care-circle member] --> WEB[Next.js App Router<br/>React + TypeScript]
-    WEB --> AUTH[Server-side authentication<br/>and session checks]
-    WEB --> LOGIC[Validated application actions]
-    AUTH --> SA[Supabase Auth]
-    LOGIC --> RPC[Permission-checked PostgreSQL RPCs]
-    RPC --> DB[(Supabase PostgreSQL)]
-    DB --> RLS[Row Level Security<br/>profile and role boundaries]
-    RPC --> OUTBOX[Notification outbox]
-    OUTBOX --> WORKER[Configured worker / scheduled processing]
-    WORKER --> RESEND[Resend email API<br/>(optional configuration)]
+    U["Older person / care-circle member"] --> WEB["Next.js App Router — React + TypeScript"]
+    WEB --> AUTH["Server-side authentication and session checks"]
+    WEB --> LOGIC["Validated application actions"]
+    AUTH --> SA["Supabase Auth"]
+    LOGIC --> RPC["Permission-checked PostgreSQL RPCs"]
+    RPC --> DB[("Supabase PostgreSQL")]
+    DB --> RLS["Row Level Security — profile and role boundaries"]
+    RPC --> OUTBOX["Notification outbox"]
+    OUTBOX --> WORKER["Configured worker / scheduled processing"]
+    WORKER --> RESEND["Resend email API (optional configuration)"]
 
-    DEV[Local development mode] -. development only .-> PGLITE[(Embedded PGlite database)]
+    DEV["Local development mode"] -. development only .-> PGLITE[("Embedded PGlite database")]
     WEB -. local-only fallback .-> DEV
 ```
-
 ### Hosted and local modes
 
 - **Hosted/production:** Uses Supabase Auth and Supabase PostgreSQL. Configure the Supabase project URL and publishable key. Administrative keys are server-side only and are not browser credentials.
